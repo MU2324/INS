@@ -1,0 +1,75 @@
+IPsec
+
+#IMP -> Be in Realtime , dont be inside simulation
+
+First take 3 routers of 1941
+turn off -> In Physical section of all routers add HWIC-2T port -> turn on
+Connect each Router to their PC via a switch with automatic wire(black color)
+Connect left router to center router  and  right router to center with automatic wire(red color)
+
+Left Router IP on Serial -> 10.0.0.2
+Right Router IP on Serial -> 20.0.0.2
+Center Router IP on serial to left -> 10.0.0.1
+Center Router IP on serial to right -> 20.0.0.1
+
+Left Router PCs ip -> 192.168.1.10
+Left Router Gateway and routers ip -> 192.168.1.1
+
+
+Right Router PCs ip -> 192.168.2.10
+Right Router Gateway and routers ip -> 192.168.2.1
+
+Left router CLI Commands (Change the interface according to your interface) ->
+
+config t
+license boot module c1900 technology-package securityk9
+yes
+end
+copy running-config startup-config
+
+reload
+config t
+access-list 110 permit ip 192.168.1.0 0.0.0.255 192.168.2.0 0.0.0.255
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+exit
+crypto isakmp key vpnpa55 address 20.0.0.2
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+crypto map VPN-MAP 10 ipsec-isakmp
+description VPN connection to R3
+set peer 20.0.0.2
+set transform-set VPN-SET
+match address 110
+exit 
+interface S0/0/0
+crypto map VPN-MAP
+
+
+Right router CLI Commands (Change the interface according to your interface) ->
+
+config t
+license boot module c1900 technology-package securityk9
+yes
+end
+copy running-config startup-config
+
+reload
+config t
+access-list 110 permit ip 192.168.2.0 0.0.0.255 192.168.1.0 0.0.0.255
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+exit
+crypto isakmp key vpnpa55 address 10.0.0.2
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+crypto map VPN-MAP 10 ipsec-isakmp
+description VPN connection to R3
+set peer 10.0.0.2
+set transform-set VPN-SET
+match address 110
+exit 
+interface S0/0/0
+crypto map VPN-MAP
